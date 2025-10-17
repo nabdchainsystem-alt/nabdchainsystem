@@ -1,0 +1,41 @@
+import { provideIcons } from '@ng-icons/core';
+import {
+  lucideHome,
+  lucideMail,
+  lucideUsers,
+  lucideFileText,
+  lucideBarChart2,
+  lucidePenSquare,
+  lucideClipboardList,
+  lucideVideo,
+  lucideActivity,
+  lucideTarget,
+  lucideClock,
+  lucideMoreHorizontal,
+  lucideChevronDown,
+  lucidePlusCircle,
+  lucideCheckCircle2,
+  lucideAlarmClock,
+  lucideGrid3x3,
+} from '@ng-icons/lucide';
+
+export const provideNabdIcons = () =>
+  provideIcons({
+    lucideHome,
+    lucideMail,
+    lucideUsers,
+    lucideFileText,
+    lucideBarChart2,
+    lucidePenSquare,
+    lucideClipboardList,
+    lucideVideo,
+    lucideActivity,
+    lucideTarget,
+    lucideClock,
+    lucideMoreHorizontal,
+    lucideChevronDown,
+    lucidePlusCircle,
+    lucideCheckCircle2,
+    lucideAlarmClock,
+    lucideGrid3x3,
+  });

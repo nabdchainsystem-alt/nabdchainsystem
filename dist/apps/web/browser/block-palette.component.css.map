@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["libs/ui-shell/src/lib/block-palette.component.ts"],
+  "sourcesContent": ["\n      .item {\n        display: flex;\n        align-items: center;\n        gap: 8px;\n        padding: 8px 10px;\n        border: 1px solid #e5e7eb;\n        border-radius: 10px;\n        cursor: grab;\n        background: #fff;\n      }\n      .item + .item {\n        margin-top: 8px;\n      }\n    "],
+  "mappings": ";AACM,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;AACA,WAAA,IAAA;AACA,UAAA,IAAA,MAAA;AACA,iBAAA;AACA,UAAA;AACA,cAAA;;AAEF,CAVA,KAUA,EAAA,CAVA;AAWE,cAAA;;",
+  "names": []
+}

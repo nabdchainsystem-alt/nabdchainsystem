@@ -1,0 +1,31 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "baseUrl": ".",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2022",
+    "types": ["node"],
+    "lib": ["es2021", "dom"],
+    "skipLibCheck": false,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "useUnknownInCatchVariables": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "paths": {
+      "@nabdchainsystem/canvas": ["libs/canvas/src/index.ts"],
+      "@nabdchainsystem/ui-shell": ["libs/ui-shell/src/index.ts"],
+      "@nabdchainsystem/shared-util": ["libs/shared-util/src/index.ts"],
+      "@nabdchainsystem/mocks": ["libs/mocks/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
