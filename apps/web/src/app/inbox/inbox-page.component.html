@@ -1,0 +1,331 @@
+<section class="inbox">
+  <aside class="inbox__rail" aria-label="Conversation list">
+    <header class="rail-header">
+      <div>
+        <h1>Inbox</h1>
+        <p>Collaborate with teams and customers in one place.</p>
+      </div>
+      <button type="button" class="primary-action" aria-label="Start a new conversation">
+        <ng-icon name="lucidePlus" size="16"></ng-icon>
+        <span>New message</span>
+      </button>
+    </header>
+
+    <div class="rail-search">
+      <div class="search-field">
+        <ng-icon name="lucideSearch" size="16" class="search-field__icon"></ng-icon>
+        <input
+          type="search"
+          placeholder="Search conversations, people, tags"
+          [value]="filterQuery()"
+          (input)="onQueryInput($event)"
+        />
+        <button
+          type="button"
+          class="search-field__clear"
+          *ngIf="filterQuery()"
+          (click)="clearQuery()"
+          aria-label="Clear search"
+        >
+          <ng-icon name="lucideX" size="14"></ng-icon>
+        </button>
+      </div>
+      <button type="button" class="ghost-action" aria-label="Filter conversations">
+        <ng-icon name="lucideFilter" size="16"></ng-icon>
+        Filters
+      </button>
+    </div>
+
+    <nav class="rail-filters" aria-label="Inbox filter">
+      <button
+        type="button"
+        class="filter-chip"
+        [class.filter-chip--active]="activeFilter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        All
+      </button>
+      <button
+        type="button"
+        class="filter-chip"
+        [class.filter-chip--active]="activeFilter() === 'unread'"
+        (click)="setFilter('unread')"
+      >
+        Unread
+        <span class="chip-count" *ngIf="hasUnread()">
+          {{ unreadTotal() }}
+        </span>
+      </button>
+      <button
+        type="button"
+        class="filter-chip"
+        [class.filter-chip--active]="activeFilter() === 'priority'"
+        (click)="setFilter('priority')"
+      >
+        Priority
+      </button>
+    </nav>
+
+    <section
+      class="conversation-list"
+      *ngIf="filteredConversations().length; else emptyState"
+      aria-label="Conversations"
+    >
+      <article
+        class="conversation-card"
+        *ngFor="let conversation of filteredConversations(); trackBy: trackConversation"
+        [class.conversation-card--selected]="conversation.id === selectedConversationId()"
+        (click)="selectConversation(conversation.id)"
+      >
+        <div class="conversation-card__meta">
+          <div class="conversation-card__title">
+            <h2>{{ conversation.title }}</h2>
+            <span
+              class="priority"
+              *ngIf="conversation.priority === 'high'"
+              [attr.aria-label]="priorityLabel(conversation.priority)"
+            >
+              High
+            </span>
+            <ng-icon
+              *ngIf="conversation.isStarred"
+              name="lucideStar"
+              class="icon-star"
+              size="14"
+              aria-hidden="true"
+            ></ng-icon>
+          </div>
+          <time [attr.datetime]="conversation.lastMessageAt.toISOString()">
+            {{ relativeTime(conversation.lastMessageAt) }}
+          </time>
+        </div>
+
+        <div class="conversation-card__preview">
+          <div class="avatar-stack">
+            <span
+              class="avatar"
+              *ngFor="let participant of conversation.participants; trackBy: trackParticipant; let idx = index"
+              [style.zIndex]="conversation.participants.length - idx"
+            >
+              {{ participantInitial(participant) }}
+            </span>
+          </div>
+          <div class="conversation-card__body">
+            <p class="conversation-card__line">
+              <ng-container
+                *ngIf="lastMessage(conversation) as message; else noMessage"
+              >
+                <span class="sender">
+                  {{ resolveAuthor(message).name }}:
+                </span>
+                <span class="body">
+                  {{ message.body }}
+                </span>
+              </ng-container>
+              <ng-template #noMessage>
+                <span class="body muted">No messages yet</span>
+              </ng-template>
+            </p>
+            <div class="tag-row">
+              <span class="tag" *ngFor="let tag of conversation.tags; trackBy: trackTag">{{ tag }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="conversation-card__pill" *ngIf="conversation.unreadCount">
+          {{ conversation.unreadCount }}
+        </div>
+      </article>
+    </section>
+  </aside>
+
+  <section class="inbox__thread" aria-label="Messages">
+    <ng-container *ngIf="activeConversation() as conversation; else selectConversationPrompt">
+      <header class="thread-header">
+        <div class="thread-header__title">
+          <h2>{{ conversation.title }}</h2>
+          <div class="thread-header__meta">
+            <span>
+              {{ conversationParticipants(conversation) || 'Solo workspace' }}
+            </span>
+            <span class="meta-divider">•</span>
+            <span>{{ conversation.messages.length }} messages</span>
+            <span class="meta-divider">•</span>
+            <span>{{ priorityLabel(conversation.priority) }}</span>
+          </div>
+        </div>
+        <div class="thread-header__actions">
+          <button type="button" class="ghost-action" aria-label="Start audio call">
+            <ng-icon name="lucidePhone" size="16"></ng-icon>
+          </button>
+          <button type="button" class="ghost-action" aria-label="Start video call">
+            <ng-icon name="lucideVideo" size="16"></ng-icon>
+          </button>
+          <button
+            type="button"
+            class="ghost-action"
+            [attr.aria-pressed]="conversation.isStarred"
+            (click)="toggleStar(conversation)"
+            [attr.aria-label]="conversation.isStarred ? 'Remove star' : 'Star conversation'"
+          >
+            <ng-icon
+              [name]="conversation.isStarred ? 'lucideStar' : 'lucideStarOff'"
+              size="16"
+            ></ng-icon>
+          </button>
+          <button
+            type="button"
+            class="ghost-action"
+            [attr.aria-pressed]="conversation.isMuted"
+            (click)="toggleMute(conversation)"
+            [attr.aria-label]="conversation.isMuted ? 'Unmute conversation' : 'Mute conversation'"
+          >
+            <ng-icon
+              [name]="conversation.isMuted ? 'lucideBellOff' : 'lucideBellRing'"
+              size="16"
+            ></ng-icon>
+          </button>
+          <button
+            type="button"
+            class="ghost-action"
+            (click)="toggleDetails()"
+            [attr.aria-pressed]="showDetailsPanel()"
+            aria-label="Toggle details panel"
+          >
+            <ng-icon name="lucideLayoutGrid" size="16"></ng-icon>
+          </button>
+        </div>
+      </header>
+
+      <div class="thread-scroll" aria-live="polite">
+        <ng-container *ngFor="let group of messageGroups(); trackBy: trackMessageGroup">
+          <div class="message-group-label">{{ group.label }}</div>
+          <article
+            *ngFor="let message of group.messages; trackBy: trackMessage"
+            class="message"
+            [class.message--outgoing]="messageAlignment(message) === 'outgoing'"
+            [class.message--incoming]="messageAlignment(message) === 'incoming'"
+          >
+            <div class="message__avatar" *ngIf="messageAlignment(message) === 'incoming'">
+              <span>{{ resolveAuthor(message).initials }}</span>
+            </div>
+            <div class="message__bubble">
+              <header class="message__meta">
+                <strong>{{ resolveAuthor(message).name }}</strong>
+                <span>•</span>
+                <time [attr.datetime]="message.sentAt.toISOString()">
+                  {{ message.sentAt | date: 'shortTime' }}
+                </time>
+                <span class="meta-divider">•</span>
+                <span>{{ statusLabel(message.status) }}</span>
+              </header>
+              <p class="message__text">
+                {{ message.body }}
+              </p>
+              <div class="message__attachments" *ngIf="message.attachments?.length">
+                <a
+                  class="attachment"
+                  *ngFor="let attachment of message.attachments; trackBy: trackAttachment"
+                  href="#"
+                  (click)="$event.preventDefault()"
+                >
+                  <ng-icon name="lucidePaperclip" size="14"></ng-icon>
+                  <span>
+                    <strong>{{ attachment.name }}</strong>
+                    <small>{{ attachment.size }}</small>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </article>
+        </ng-container>
+      </div>
+
+      <footer class="composer">
+        <div class="composer__actions">
+          <button type="button" class="ghost-action" aria-label="Attach file">
+            <ng-icon name="lucidePaperclip" size="16"></ng-icon>
+          </button>
+          <button type="button" class="ghost-action" aria-label="Insert emoji">
+            <ng-icon name="lucideSmile" size="16"></ng-icon>
+          </button>
+        </div>
+        <textarea
+          class="composer__input"
+          rows="1"
+          [ngModel]="composerDraft()"
+          (ngModelChange)="composerDraft.set($event)"
+          (keydown)="handleComposerKeydown($event)"
+          [placeholder]="composerPlaceholder()"
+        ></textarea>
+        <button
+          type="button"
+          class="primary-action"
+          (click)="sendMessage()"
+          [disabled]="!composerDraft().trim()"
+        >
+          <ng-icon name="lucideSend" size="16"></ng-icon>
+          Send
+        </button>
+      </footer>
+    </ng-container>
+  </section>
+
+  <aside
+    class="inbox__details"
+    aria-label="Conversation details"
+    *ngIf="showDetailsPanel() && activeConversation() as conversation"
+  >
+    <header class="details-header">
+      <h3>Details</h3>
+      <span class="details-status" [attr.aria-label]="priorityLabel(conversation.priority)">
+        {{ conversation.priority | titlecase }}
+      </span>
+    </header>
+    <section class="details-section">
+      <h4>Participants</h4>
+      <ul>
+        <li *ngFor="let participant of conversation.participants; trackBy: trackParticipant">
+          <div class="participant">
+            <span class="avatar">{{ participant.initials }}</span>
+            <div class="participant__meta">
+              <strong>{{ participant.name }}</strong>
+              <span>{{ participant.role }}</span>
+            </div>
+            <span class="presence presence--{{ participant.presence }}">
+              {{ participantPresence(participant) }}
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="details-section">
+      <h4>Tags</h4>
+      <div class="details-tags">
+        <span class="tag" *ngFor="let tag of conversation.tags; trackBy: trackTag">{{ tag }}</span>
+      </div>
+    </section>
+
+    <section class="details-section">
+      <h4>Summary</h4>
+      <p>
+        Stay aligned on decisions, approvals, and outstanding actions. Use the inbox to capture cross-team
+        decisions and route follow ups into tasks without losing context.
+      </p>
+    </section>
+  </aside>
+</section>
+
+<ng-template #emptyState>
+  <div class="empty">
+    <p>No conversations match your filters yet.</p>
+  </div>
+</ng-template>
+
+<ng-template #selectConversationPrompt>
+  <div class="thread-empty">
+    <h2>Select a conversation</h2>
+    <p>Choose a thread to view the full history and collaborate with the team.</p>
+  </div>
+</ng-template>

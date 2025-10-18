@@ -3,7 +3,8 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ZoomService {
-  private _zoom$ = new BehaviorSubject<number>(1);
+  private static readonly DEFAULT_ZOOM = 1;
+  private _zoom$ = new BehaviorSubject<number>(ZoomService.DEFAULT_ZOOM);
   readonly zoom$ = this._zoom$.asObservable();
 
   set(value: number) {
@@ -20,6 +21,6 @@ export class ZoomService {
   }
 
   reset() {
-    this._zoom$.next(1);
+    this._zoom$.next(ZoomService.DEFAULT_ZOOM);
   }
 }

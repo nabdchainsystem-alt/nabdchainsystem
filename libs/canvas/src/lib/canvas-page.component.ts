@@ -1,48 +1,36 @@
-import { AsyncPipe, NgStyle } from '@angular/common';
-import { Component, HostListener, inject } from '@angular/core';
-import { ZoomService } from '@nabdchainsystem/shared-util';
-import { CanvasGridComponent } from './canvas-grid.component';
+import { Component, computed, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
+import {
+  CanvasGridComponent,
+  HOME_CANVAS_BLOCKS,
+  canvasStorageKeyForRoom,
+} from './canvas-grid.component';
 
 @Component({
   selector: 'lib-canvas-page',
   standalone: true,
-  imports: [AsyncPipe, NgStyle, CanvasGridComponent],
+  imports: [CanvasGridComponent],
   template: `
     <div class="canvas-scroll">
-      <div
-        class="canvas"
-        [ngStyle]="{ '--zoom-scale': (zoom.zoom$ | async) ?? 1 }"
-      >
-        <lib-canvas-grid />
+      <div class="canvas">
+        <lib-canvas-grid
+          [storageKey]="storageKey()"
+          [defaultBlocks]="defaultBlocks()"
+        />
       </div>
     </div>
   `,
 })
 export class CanvasPageComponent {
-  zoom = inject(ZoomService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly roomId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('roomId'))),
+    { initialValue: this.route.snapshot.paramMap.get('roomId') }
+  );
 
-  @HostListener('wheel', ['$event'])
-  onWheel(e: WheelEvent) {
-    if (!(e.ctrlKey || e.metaKey)) {
-      return;
-    }
-    e.preventDefault();
-    const delta = Math.sign(e.deltaY) * -0.05;
-    this.zoom.inc(delta);
-  }
-  @HostListener('document:keydown', ['$event'])
-  onKey(e: KeyboardEvent) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
-      e.preventDefault();
-      this.zoom.inc();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === '-') {
-      e.preventDefault();
-      this.zoom.dec();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === '0') {
-      e.preventDefault();
-      this.zoom.reset();
-    }
-  }
+  readonly storageKey = computed(() => canvasStorageKeyForRoom(this.roomId() ?? undefined));
+  readonly defaultBlocks = computed(() => (this.roomId() ? [] : HOME_CANVAS_BLOCKS));
 }
+
